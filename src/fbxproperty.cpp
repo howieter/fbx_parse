@@ -97,11 +97,11 @@ FBXProperty::FBXProperty(std::ifstream &input)
             if(decompressedBuffer == NULL) throw std::string("Malloc failed");
             BufferAutoFree baf(decompressedBuffer);
 
-            uint8_t compressedBuffer[compressedLength];
+            uint8_t *compressedBuffer = (uint8_t*)calloc(compressedLength, sizeof(uint8_t));
             reader.read((char*)compressedBuffer, compressedLength);
 
-            uint64_t destLen = uncompressedLength;
-            uint64_t srcLen = compressedLength;
+            uLongf destLen = uncompressedLength;
+            uLongf srcLen = compressedLength;
             uncompress2(decompressedBuffer, &destLen, compressedBuffer, &srcLen);
 
             if(srcLen != compressedLength) throw std::string("compressedLength does not match data");
@@ -112,6 +112,7 @@ FBXProperty::FBXProperty(std::ifstream &input)
             for(uint32_t i = 0; i < arrayLength; i++) {
                 values.push_back(readPrimitiveValue(r, type - ('a'-'A')));
             }
+            free(compressedBuffer);
         } else {
             for(uint32_t i = 0; i < arrayLength; i++) {
                 values.push_back(readPrimitiveValue(reader, type - ('a'-'A')));
