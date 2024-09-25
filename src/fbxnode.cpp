@@ -90,13 +90,13 @@ uint32_t FBXNode::write(std::ofstream &output, uint32_t start_offset)
     return bytes;
 }
 
-void FBXNode::print(std::string prefix)
+void FBXNode::printAll(std::string prefix)
 {
     cout << prefix << "{ \"name\": \"" << name << "\"" << (properties.size() + children.size() > 0 ? ",\n" : "\n");
     if(properties.size() > 0) {
         cout << prefix << "  \"properties\": [\n";
         bool hasPrev = false;
-        for(FBXProperty prop : properties) {
+        for(FBXProperty &prop : properties) {
             if(hasPrev) cout << ",\n";
             cout << prefix << "    { \"type\": \"" << prop.getType() << "\", \"value\": " << prop.to_string() << " }";
             hasPrev = true;
@@ -109,9 +109,9 @@ void FBXNode::print(std::string prefix)
     if(children.size() > 0) {
         cout << prefix << "  \"children\": [\n";
         bool hasPrev = false;
-        for(FBXNode node : children) {
+        for(FBXNode &node : children) {
             if(hasPrev) cout << ",\n";
-            node.print(prefix+"    ");
+            node.printAll(prefix+"    ");
             hasPrev = true;
         }
         cout << "\n";
@@ -120,6 +120,60 @@ void FBXNode::print(std::string prefix)
 
     cout << prefix << "}";
 
+}
+
+void FBXNode::printFiltred(std::string prefix)
+{
+    cout << prefix << "{ \"name\": \"" << name << "\"" << (properties.size() + children.size() > 0 ? ",\n" : "\n");
+    if(properties.size() > 0) {
+        cout << prefix << "  \"properties\": [\n";
+        bool hasPrev = false;
+        for(FBXProperty &prop : properties) {
+            if(hasPrev) cout << ",\n";
+            cout << prefix << "    { \"type\": \"" << prop.getType() << "\", \"value\": " << prop.to_string() << " }";
+            hasPrev = true;
+        }
+        cout << "\n";
+        cout << prefix << "  ]" << (children.size() > 0 ? ",\n" : "\n");
+
+    }
+
+    if(children.size() > 0) {
+        cout << prefix << "  \"children\": [\n";
+        bool hasPrev = false;
+        for(FBXNode &node : children) {
+            if (node.getName() == "Model"                || node.getName() == "Material"               || node.getName() == "GlobalSettings" 
+             || node.getName() == "Geometry"             || node.getName() == "UnitScaleFactor"        || node.getName() == "Layer"                   
+             || node.getName() == "Version"              || node.getName() == "MappingInformationType" || node.getName() == "ReferenceInformationType"
+             || node.getName() == "Materials"            || node.getName() == "ObjectType"             || node.getName() == "Count" 
+             || node.getName() == "PropertyTemplate"     || node.getName() == "Properties70"           || node.getName() == "Properties60"  
+             || node.getName() == "Vertices"             || node.getName() == "PolygonVertexIndex"     || node.getName() == "UV" 
+             || node.getName() == "LayerElementUV"       || node.getName() == "UVIndex"                || node.getName() == "Name"
+             || node.getName() == "LayerElementMaterial" || node.getName() == "Connections"            || node.getName() == "C"
+               ) 
+            {
+                if(hasPrev) cout << ",\n";
+                node.printFiltred(prefix + "    ");
+                hasPrev = true;
+            } else if (node.getName() == "P" || node.getName() == "Properties") {
+                FBXProperty prop = node.getProperties().front();
+                if (prop.to_string() == "\"Lcl Translation\"") {
+                    if(hasPrev) cout << ",\n";
+                    node.printFiltred(prefix + "    ");
+                    hasPrev = true;
+                }
+            }
+        }
+        cout << "\n";
+        cout << prefix << "  ]\n";
+    }
+
+    cout << prefix << "}";
+
+}
+
+const std::vector<FBXProperty> &FBXNode::getProperties() const {
+    return properties;
 }
 
 bool FBXNode::isNull()
@@ -183,7 +237,7 @@ const std::vector<FBXNode> FBXNode::getChildren()
     return children;
 }
 
-const std::string FBXNode::getName()
+const std::string FBXNode::getName() const
 {
     return name;
 }

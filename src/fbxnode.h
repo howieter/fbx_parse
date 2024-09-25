@@ -13,7 +13,8 @@ public:
 
     std::uint32_t read(std::ifstream &input, uint32_t start_offset);
     std::uint32_t write(std::ofstream &output, uint32_t start_offset);
-    void print(std::string prefix="");
+    void printAll(std::string prefix="");
+    void printFiltred(std::string prefix="");
     bool isNull();
 
     void addProperty(int16_t);
@@ -51,7 +52,9 @@ public:
     uint32_t getBytes();
 
     const std::vector<FBXNode> getChildren();
-    const std::string getName();
+    const std::string getName() const;
+    const std::vector<FBXProperty> &getProperties() const;
+
 private:
     std::vector<FBXNode> children;
     std::vector<FBXProperty> properties;

@@ -9,10 +9,28 @@ using std::ofstream;
 using std::uint32_t;
 using std::uint8_t;
 
-namespace fbx {
+namespace fbx 
+{
 FBXDocument::FBXDocument()
 {
     version = 7400;
+}
+
+std::uint32_t FBXDocument::getVersion()
+{
+    return version;
+}
+
+bool checkMagic(Reader &reader)
+{
+    string magic("Kaydara FBX Binary  ");
+    for(char c : magic) {
+        if(reader.readUint8() != c) return false;
+    }
+    if(reader.readUint8() != 0x00) return false;
+    if(reader.readUint8() != 0x1A) return false;
+    if(reader.readUint8() != 0x00) return false;
+    return true;
 }
 
 void FBXDocument::read(string fname)
@@ -33,6 +51,27 @@ void FBXDocument::read(string fname)
     file.close();
 }
 
+void FBXDocument::read(std::ifstream &input)
+{
+    Reader reader(&input);
+    input >> std::noskipws;
+    if(!checkMagic(reader)) throw std::string("Not a FBX file");
+
+    uint32_t version = reader.readUint32();
+    uint32_t maxVersion = 7400;
+    
+    if(version > maxVersion) throw "Unsupported FBX version "+std::to_string(version)
+                            + " latest supported version is "+std::to_string(maxVersion);
+
+    uint32_t start_offset = 27; // magic: 21 + 2, version: 4
+    do {
+        FBXNode node;
+        start_offset += node.read(input, start_offset);
+        if(node.isNull()) break;
+        nodes.push_back(node);
+    } while(true);
+}
+
 void FBXDocument::write(string fname)
 {
     ofstream file;
@@ -49,39 +88,6 @@ void FBXDocument::write(string fname)
         throw std::string("Cannot write to file: \"" + fname + "\"");
     }
     file.close();
-}
-
-bool checkMagic(Reader &reader)
-{
-    string magic("Kaydara FBX Binary  ");
-    for(char c : magic) {
-        if(reader.readUint8() != c) return false;
-    }
-    if(reader.readUint8() != 0x00) return false;
-    if(reader.readUint8() != 0x1A) return false;
-    if(reader.readUint8() != 0x00) return false;
-    return true;
-}
-
-void FBXDocument::read(std::ifstream &input)
-{
-    Reader reader(&input);
-    input >> std::noskipws;
-    if(!checkMagic(reader)) throw std::string("Not a FBX file");
-
-    uint32_t version = reader.readUint32();
-
-    uint32_t maxVersion = 7400;
-    if(version > maxVersion) throw "Unsupported FBX version "+std::to_string(version)
-                            + " latest supported version is "+std::to_string(maxVersion);
-
-    uint32_t start_offset = 27; // magic: 21+2, version: 4
-    do{
-        FBXNode node;
-        start_offset += node.read(input, start_offset);
-        if(node.isNull()) break;
-        nodes.push_back(node);
-    } while(true);
 }
 
 namespace {
@@ -278,12 +284,7 @@ void FBXDocument::createBasicStructure()
 
 }
 
-std::uint32_t FBXDocument::getVersion()
-{
-    return version;
-}
-
-void FBXDocument::print()
+void FBXDocument::printAllNodes()
 {
     cout << "{\n";
     cout << "  \"version\": " << getVersion() << ",\n";
@@ -291,8 +292,26 @@ void FBXDocument::print()
     bool hasPrev = false;
     for(auto node : nodes) {
         if(hasPrev) cout << ",\n";
-        node.print("    ");
+        node.printAll("    ");
         hasPrev = true;
+    }
+    cout << "\n  ]\n}" << endl;
+}
+
+void FBXDocument::printSomeNodes()
+{
+    cout << "{\n";
+    cout << "  \"version\": " << getVersion() << ",\n";
+    cout << "  \"children\": [\n";
+    bool hasPrev = false;
+    for(auto node : nodes) {
+        if (node.getName() == "Objects" || node.getName() == "Definitions" || node.getName() == "GlobalSettings"
+         || node.getName() == "Connections")
+        { // Model and Material
+            if(hasPrev) cout << ",\n";
+            node.printFiltred("    ");
+            hasPrev = true;
+        }
     }
     cout << "\n  ]\n}" << endl;
 }
