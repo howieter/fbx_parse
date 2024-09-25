@@ -21,6 +21,18 @@ std::uint32_t FBXDocument::getVersion()
     return version;
 }
 
+const std::vector<FBXNode> &FBXDocument::getNodes() const {
+    return nodes;
+}
+
+std::string FBXDocument::readFBXwriteJsonFiltered(const std::string fbxPath) {
+    read(fbxPath);
+    std::string pathToJson = trimPathFbxToJson(fbxPath);
+    writeSomeNodesJson(pathToJson);
+    return pathToJson;
+}
+
+
 bool checkMagic(Reader &reader)
 {
     string magic("Kaydara FBX Binary  ");
@@ -315,5 +327,44 @@ void FBXDocument::printSomeNodes()
     }
     cout << "\n  ]\n}" << endl;
 }
+
+void FBXDocument::writeSomeNodesJson(const std::string pathToJson) {
+    std::ofstream file(pathToJson);
+
+    file << "{\n";
+    file << "  \"version\": " << getVersion() << ",\n";
+    file << "  \"children\": [\n";
+    bool hasPrev = false;
+    for(auto node : nodes) {
+        if (node.getName() == "Objects" || node.getName() == "Definitions" || node.getName() == "GlobalSettings"
+         || node.getName() == "Connections")
+        { // Model and Material
+            if(hasPrev) file << ",\n";
+            node.writeFiltered(file, "    ");
+            hasPrev = true;
+        }
+    }
+    file << "\n  ]\n}" << endl;
+
+    file.close();
+}
+
+std::string FBXDocument::trimPathFbxToJson(const std::string &pathToFbx) {
+    // Найдем имя файла без пути
+    size_t lastSlash     = pathToFbx.find_last_of("/\\");
+    std::string fileName = (lastSlash == std::string::npos) ? pathToFbx : pathToFbx.substr(lastSlash + 1);
+
+    // Обрезаем расширение .fbx и заменяем его на .json
+    size_t extensionPos = fileName.find_last_of('.');
+    if (extensionPos != std::string::npos && fileName.substr(extensionPos) == ".fbx") {
+        fileName = fileName.substr(0, extensionPos) + ".json";
+    }
+
+    // Если путь был полный, нужно вернуть полный путь с новым расширением
+    std::string pathToJson = (lastSlash == std::string::npos) ? fileName : pathToFbx.substr(0, lastSlash + 1) + fileName;
+
+    return pathToJson;
+}
+
 
 } // namespace fbx

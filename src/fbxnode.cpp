@@ -172,6 +172,53 @@ void FBXNode::printFiltred(std::string prefix)
 
 }
 
+void FBXNode::writeFiltered(std::ostream &fileJson, const std::string prefix) {
+    fileJson << prefix << "{ \"name\": \"" << name << "\"" << (properties.size() + children.size() > 0 ? ",\n" : "\n");
+    if (properties.size() > 0) {
+        fileJson << prefix << "  \"properties\": [\n";
+        bool hasPrev = false;
+        for (FBXProperty &prop : properties) {
+            if (hasPrev) fileJson << ",\n";
+            fileJson << prefix << "    { \"type\": \"" << prop.getType() << "\", \"value\": " << prop.to_string() << " }";
+            hasPrev = true;
+        }
+        fileJson << "\n";
+        fileJson << prefix << "  ]" << (children.size() > 0 ? ",\n" : "\n");
+    }
+
+    if(children.size() > 0) {
+        fileJson << prefix << "  \"children\": [\n";
+        bool hasPrev = false;
+        for(FBXNode &node : children) {
+            if (node.getName() == "Model"                || node.getName() == "Material"               || node.getName() == "GlobalSettings" 
+             || node.getName() == "Geometry"             || node.getName() == "UnitScaleFactor"        || node.getName() == "Layer"                   
+             || node.getName() == "Version"              || node.getName() == "MappingInformationType" || node.getName() == "ReferenceInformationType"
+             || node.getName() == "Materials"            || node.getName() == "ObjectType"             || node.getName() == "Count" 
+             || node.getName() == "PropertyTemplate"     || node.getName() == "Properties70"           || node.getName() == "Properties60"  
+             || node.getName() == "Vertices"             || node.getName() == "PolygonVertexIndex"     || node.getName() == "UV" 
+             || node.getName() == "LayerElementUV"       || node.getName() == "UVIndex"                || node.getName() == "Name"
+             || node.getName() == "LayerElementMaterial" || node.getName() == "Connections"            || node.getName() == "C"
+               ) 
+            {
+                if (hasPrev) fileJson << ",\n";
+                node.writeFiltered(fileJson, prefix + "    ");
+                hasPrev = true;
+            } else if (node.getName() == "P" || node.getName() == "Properties") {
+                FBXProperty prop = node.getProperties().front();
+                if (prop.to_string() == "\"Lcl Translation\"") {
+                    if (hasPrev) fileJson << ",\n";
+                    node.writeFiltered(fileJson, prefix + "    ");
+                    hasPrev = true;
+                }
+            }
+        }
+        fileJson << "\n";
+        fileJson << prefix << "  ]\n";
+    }
+
+    fileJson << prefix << "}";
+}
+
 const std::vector<FBXProperty> &FBXNode::getProperties() const {
     return properties;
 }

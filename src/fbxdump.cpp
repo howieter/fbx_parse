@@ -24,43 +24,15 @@ bool findNode(const std::string name, FBXNode where) {
 }
 
 int main(int argc, char** argv) {
-    // auto start = std::chrono::high_resolution_clock::now();
-
-    // if(argc < 2) {
-    //     cerr << "Specify file which you want to dump" << endl;
-    //     return 1;
-    // }
-
     try {
         fbx::FBXDocument doc;
-        // doc.read(argv[1]);
-        // doc.read("fbx/SM_VolokolamskoeShosse_106_Ground.fbx");
-        // doc.read("fbx/test_object_boxes_01.fbx");
-        // doc.read("fbx/test_object_boxes_02.fbx");
-
-        // doc.read("fbx/SM_Lyublinskaya_ZU_111_3.fbx");
-        doc.read("fbx/SM_Kronshtadtskij_Bulvar_Ground.fbx");
-        // doc.read("fbx/SM_Kronshtadtskij_Bulvar_Ground_replaced.fbx");
-        // doc.read("fbx/SM_Kronshtadtskij_Bulvar_Ground_bin_test.fbx");
-        // doc.read("fbx/SM_Stavropolskaya_Vld_4_K_2_001.fbx");
-        // doc.read("fbx/SM_Stavropolskaya_Vld_4_K_2_Ground.fbx");
-        if(argc > 2) {
-            for(auto n : doc.nodes) {
-                if(findNode(argv[2], n)) break;
-            }
-        } else {
-            // doc.printAllNodes();
-            doc.printSomeNodes();
-        }
+        std::string jsonPath = doc.readFBXwriteJsonFiltered("fbx/SM_Kronshtadtskij_Bulvar_Ground.fbx");
+        std::cout << "json path = " << jsonPath << std::endl;
 
     } catch(string s) {
         cerr << "ERROR: " << s << endl;
         return 2;
     }
-
-    // auto end = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> elapsed = end - start;
-    // std::cout << "Время выполнения: " << elapsed.count() << " секунд" << std::endl;
 
     return 0;
 }

@@ -2,6 +2,7 @@
 #define FBXNODE_H
 
 #include "fbxproperty.h"
+#include <fstream>
 
 namespace fbx {
 
@@ -13,8 +14,22 @@ public:
 
     std::uint32_t read(std::ifstream &input, uint32_t start_offset);
     std::uint32_t write(std::ofstream &output, uint32_t start_offset);
+
+    /* @brief
+    Prints full fbx file.
+    */
     void printAll(std::string prefix="");
+
+    /* @brief
+    Prints fbx file with filters.
+    */
     void printFiltred(std::string prefix="");
+
+    /* @brief
+    Writes fbx file nodes with filters to json file.
+    */
+    void writeFiltered(std::ostream &fileJson, const std::string prefix="");
+
     bool isNull();
 
     void addProperty(int16_t);
