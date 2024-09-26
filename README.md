@@ -15,3 +15,11 @@ Also includes fbxdump which allows you to inspect fbx files in json format.
 # Javascript port
 
 [fbx.js](https://github.com/jskorepa/fbx.js)
+
+-----
+# Build project:
+
+	mkdir build
+	cd build
+	cmake ../src
+	cmake --build . --config Release
