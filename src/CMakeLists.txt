@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(fbx-writer)
+project(fbx-dump)
 
 # Установить стандарт C++ и общие флаги компиляции для всех платформ
 set(CMAKE_CXX_STANDARD 17)
@@ -15,29 +15,21 @@ include_directories(${ZLIB_INCLUDE_DIRS})
 set(SOURCE_FILES fbxdocument.cpp fbxnode.cpp fbxutil.cpp fbxproperty.cpp)
 
 # Собрать исполняемые файлы
-add_executable(fbx-writer main.cpp ${SOURCE_FILES})
-target_link_libraries(fbx-writer ${ZLIB_LIBRARIES})
+add_executable(fbx-dump main.cpp ${SOURCE_FILES})
+target_link_libraries(fbx-dump ${ZLIB_LIBRARIES})
 
 add_executable(fbxdump fbxdump.cpp ${SOURCE_FILES})
 target_link_libraries(fbxdump ${ZLIB_LIBRARIES})
 
-# Добавить сборку динамической библиотеки (DLL для Windows, .dylib для macOS, .so для Linux)
-add_library(fbx-writer-lib SHARED ${SOURCE_FILES})
+# Добавить сборку динамической библиотеки
+add_library(fbx-dump-lib SHARED ${SOURCE_FILES})
 
-# Условные настройки для различных операционных систем
-if(WIN32)
-    # Настройки для Windows
-    target_compile_definitions(fbx-writer-lib PRIVATE FBXWRITER_EXPORTS)
-    set_target_properties(fbx-writer-lib PROPERTIES SUFFIX ".dll")
-elseif(APPLE)
-    # Настройки для macOS
-    set_target_properties(fbx-writer-lib PROPERTIES SUFFIX ".dylib")
-    # Можно добавить дополнительные флаги для macOS, если требуется
+# Сборка либы для различных ОС
+if(APPLE)
+    set_target_properties(fbx-dump-lib PROPERTIES SUFFIX ".dylib")
 elseif(UNIX)
-    # Настройки для Linux (Ubuntu)
-    set_target_properties(fbx-writer-lib PROPERTIES SUFFIX ".so")
-    # Можно добавить специфичные флаги компиляции для Linux, если требуется
+    set_target_properties(fbx-dump-lib PROPERTIES SUFFIX ".so")
 endif()
 
 # Линковка с ZLIB для библиотеки
-target_link_libraries(fbx-writer-lib ${ZLIB_LIBRARIES})
+target_link_libraries(fbx-dump-lib ${ZLIB_LIBRARIES})
