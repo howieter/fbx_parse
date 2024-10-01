@@ -29,6 +29,7 @@ std::string FBXDocument::readFBXwriteJsonFiltered(const std::string fbxPath) {
     read(fbxPath);
     std::string pathToJson = trimPathFbxToJson(fbxPath);
     writeSomeNodesJson(pathToJson);
+    nodes.clear();
     return pathToJson;
 }
 
